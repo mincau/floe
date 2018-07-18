@@ -88,9 +88,10 @@ func TestZeroNID(t *testing.T) {
 }
 
 var in = []byte(`
-config:
+common:
     hosts:
-        - name-or.ip.of.other.host 
+      - name-or.ip.of.other.host 
+    workspace-root: "%tmp/floe"
 
 flows:
     - id: build-project              # the name of this flow

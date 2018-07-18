@@ -74,7 +74,9 @@ func TestExecuteNode(t *testing.T) {
 
 var in = []byte(`
 common:
-    base-url: "/build/api" 
+    base-url: "/build/api"
+    store-type: memory
+    workspace-root: "%tmp/floe"
     
 flows:
     - id: build-project              # the name of this flow
@@ -248,8 +250,10 @@ func TestHubEvents(t *testing.T) {
 
 var inData = []byte(`
     common:
-        base-url: "/build/api" 
-        
+        base-url: "/build/api"
+        store-type: memory
+        workspace-root: "%tmp/floe"
+
     flows:
         - id: build-project              # the name of this flow
           ver: 1

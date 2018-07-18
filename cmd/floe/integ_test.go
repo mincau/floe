@@ -1,3 +1,5 @@
+// +build integration_test
+
 package main
 
 import (
@@ -115,7 +117,7 @@ func TestWebLaunch(t *testing.T) {
 func setupWeb(t *testing.T) {
 	// N.B. Very important to use spaces in this YAML literal
 	var in = []byte(`
-config:
+common:
     hosts:
         - name-or.ip.of.other.host 
     

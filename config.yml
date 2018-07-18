@@ -3,7 +3,7 @@ common:
     store-type: local
     hosts:
         - http://127.0.0.1:8080
-        # - http://127.0.0.1:8090
+        - http://127.0.0.1:8090
 
 flows:
     - id: build-project              # the name of this flow
@@ -111,5 +111,11 @@ flows:
           type: timer                # fires every period seconds
           opts:
             period: 300              # how often to fire in seconds
+
+        - name: Commits
+          type: poll-repo
+          opts:
+            refs:                    
+            url: git@github.com:danmux/danmux-hugo.git
 
       flow-file: floe.yml            # get the actual flow from this file

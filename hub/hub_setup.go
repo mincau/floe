@@ -208,8 +208,12 @@ func (h *Hub) setupHosts(adminTok string) {
 func (h *Hub) launchTimedTriggers() {
 	for _, f := range h.config.Flows {
 		for _, t := range f.Triggers {
-			if t.Type == "timer" || t.Type == "repo" {
-				h.timers.register(config.FlowRef{ID: f.ID, Ver: f.Ver}, t.ID, t.Opts, startFlowTrigger)
+			ref := config.FlowRef{ID: f.ID, Ver: f.Ver}
+			switch t.Type {
+			case "timer":
+				h.timers.register(ref, t.ID, t.Opts, startFlowTrigger)
+			case "poll-git":
+				h.timers.register(ref, t.ID, t.Opts, pollRepoTrigger)
 			}
 		}
 	}

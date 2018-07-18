@@ -3,7 +3,7 @@ Testing on Docker
 
 To test your flow in isolation from your host tooling and environment its a good plan to test in a container.
 
-From this docker folder (`cd dev/docker`)- generate your key pair
+From this docker folder (`cd dev/docker`) - generate your key pair
 
 ```
 ssh-keygen -N "" -t rsa -b 4096 -C "build@floe.it" -f deploy_rsa
