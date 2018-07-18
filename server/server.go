@@ -26,6 +26,7 @@ type Conf struct {
 
 // LaunchWeb sets up all the http routes runs the server and launches the trigger flows
 // rp is the root path. Returns the address it binds to.
+// If webDev is true then the web files will be served from the filesystem, rather than the compiled in assets
 func LaunchWeb(conf Conf, rp string, hub *hub.Hub, q *event.Queue, addrChan chan string, webDev bool) {
 	if rp == "" {
 		rp = rootPath

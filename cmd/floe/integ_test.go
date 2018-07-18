@@ -118,6 +118,8 @@ func setupWeb(t *testing.T) {
 config:
     hosts:
         - name-or.ip.of.other.host 
+    
+    workspace-root: "%tmp/floe"
 
 flows:
     - id: build-project              # the name of this flow
@@ -204,7 +206,6 @@ flows:
 	addrChan := make(chan string, 1)
 	go func() {
 		c := srvConf{
-			Root:       "%tmp/floe",
 			HostName:   "hi1",
 			AdminToken: adminToken,
 			Tags:       "master",

@@ -11,13 +11,13 @@ import (
 	"github.com/floeit/floe/event"
 	"github.com/floeit/floe/hub"
 	"github.com/floeit/floe/log"
+	"github.com/floeit/floe/path"
 	"github.com/floeit/floe/server"
 	"github.com/floeit/floe/store"
 )
 
 func main() {
 	c := srvConf{}
-	flag.StringVar(&c.Root, "root", "~/.flow", "the root folder for configs and workspaces")
 	flag.StringVar(&c.ConfFile, "conf", "config.yml", "the host config yaml")
 	flag.StringVar(&c.HostName, "host_name", "h1", "a short host name to use in id creation and routing")
 	flag.StringVar(&c.AdminToken, "admin", "", "admin token to share in a cluster to confirm it's a p2p call")
@@ -41,20 +41,22 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Debug(start(c, cfg, nil))
+	log.Error(start(c, cfg, nil))
 }
 
 type srvConf struct {
 	server.Conf
 
-	Root       string
-	ConfFile   string
-	HostName   string
-	AdminToken string
-	Tags       string
+	ConfFile   string // the path to the main config file
+	HostName   string // the name of this host
+	AdminToken string // the token to use to verify nodes in the cluster
+	Tags       string // tags for this server to be matched against tags specified in the flows
 
-	WebDev bool
+	WebDev bool // use local file system for web assets
 }
+
+// %store_root%/store         "~/.floe/store"
+// %workspace_root%/spaces    "~/.floe/spaces"
 
 func start(sc srvConf, conf []byte, addr chan string) error {
 
@@ -68,7 +70,11 @@ func start(sc srvConf, conf []byte, addr chan string) error {
 	case "", "memory":
 		s = store.NewMemStore()
 	case "local":
-		s, err = store.NewLocalStore(filepath.Join(sc.Root, "store"))
+		root, err := path.Expand(c.Common.StoreRoot)
+		if err != nil {
+			return err
+		}
+		s, err = store.NewLocalStore(filepath.Join(root, "store"))
 		if err != nil {
 			return err
 		}
@@ -78,7 +84,7 @@ func start(sc srvConf, conf []byte, addr chan string) error {
 	// TODO - implement other stores e.g. s3
 
 	q := &event.Queue{}
-	hub := hub.New(sc.HostName, sc.Tags, sc.Root, sc.AdminToken, c, s, q)
+	hub := hub.New(sc.HostName, sc.Tags, sc.AdminToken, c, s, q)
 	server.AdminToken = sc.AdminToken
 
 	server.LaunchWeb(sc.Conf, c.Common.BaseURL, hub, q, addr, sc.WebDev)

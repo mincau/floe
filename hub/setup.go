@@ -25,7 +25,7 @@ func (h *Hub) enforceWS(runRef event.RunRef, single bool) (*nt.Workspace, error)
 
 // getWorkspace returns the appropriate Workspace struct for this flow
 func (h *Hub) getWorkspace(runRef event.RunRef, single bool) (*nt.Workspace, error) {
-	path := filepath.Join(h.basePath, "spaces", runRef.FlowRef.ID)
+	path := filepath.Join(h.config.Common.WorkspaceRoot, "spaces", runRef.FlowRef.ID)
 	if single {
 		path = filepath.Join(path, "ws", "single")
 	} else {

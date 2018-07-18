@@ -188,7 +188,7 @@ func (h *Hub) prepareForExec(runRef event.RunRef, e *event.Event, singleWs bool,
 	}
 
 	// inject any top level config opts
-	if h.config != nil && h.config.Common.GitKey != "" {
+	if h.config.Common.GitKey != "" {
 		e.Opts["key-file"] = h.config.Common.GitKey
 	}
 

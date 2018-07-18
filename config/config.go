@@ -16,20 +16,33 @@ type Config struct {
 	Flows []*Flow
 }
 
+// Defaults ensures some sensible defaults have been set up
+func (c *Config) Defaults() {
+	if c.Common.StoreType == "" {
+		c.Common.StoreType = "memory"
+	}
+	if c.Common.WorkspaceRoot == "" {
+		c.Common.WorkspaceRoot = "~/.floe"
+	}
+	if c.Common.StoreRoot == "" {
+		c.Common.StoreRoot = c.Common.WorkspaceRoot
+	}
+}
+
 type commonConfig struct {
 	// all other floe Hosts
 	Hosts []string
 	// the api base url - in case hosting on a sub domain
 	BaseURL string `yaml:"base-url"`
 
+	// WorkspaceRoot is the local disk root directory to store workspace output.
+	WorkspaceRoot string `yaml:"workspace-root"`
 	// StoreType define which type of store to use
-	StoreType string `yaml:"store-type"` // memory, local, ec2
+	StoreType string `yaml:"store-type"` // memory, local, ec2, git // TODO
+	// Store Root is local file location, ec2 bucket path, github url
+	StoreRoot string `yaml:"store-root"`
 
 	GitKey string `yaml:"git-key"` // path to the git key to use
-
-	// TODO ec2 - or back to github
-	// Store Root is ec2 bucket path
-	// StoreRoot string `yaml:"store-root"`
 
 	// StoreCredentials is a string in some format or other to provide needed credentials for
 	// specific store type.
@@ -130,6 +143,7 @@ func ParseYAML(in []byte) (*Config, error) {
 	if err != nil {
 		return c, err
 	}
+	c.Defaults()
 	err = c.zero()
 	return c, err
 }

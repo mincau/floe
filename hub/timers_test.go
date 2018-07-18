@@ -38,7 +38,7 @@ func TestTimers(t *testing.T) {
 	ts := newTimers(&Hub{
 		queue: q,
 		runs:  newRunStore(s),
-		config: &config.Config{
+		config: config.Config{
 			Flows: []*config.Flow{
 				&config.Flow{
 					ID:  "test-flow",

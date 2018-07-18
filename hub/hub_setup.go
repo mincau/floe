@@ -48,11 +48,10 @@ type mergeNode interface {
 type Hub struct {
 	sync.RWMutex
 
-	basePath  string         // the configured basePath for the hub
-	cachePath string         // folder to cache working files
-	hostID    string         // the id fo this host
-	config    *config.Config // the config rules
-	queue     *event.Queue   // the event q to route all events
+	cachePath string        // local file system directory to cache working files
+	hostID    string        // the id fo this host
+	config    config.Config // the config rules
+	queue     *event.Queue  // the event q to route all events
 
 	// any registered timers
 	timers *timers
@@ -70,23 +69,30 @@ type Hub struct {
 }
 
 // New creates a new hub with the given config
-func New(host, tags, basePath, adminTok string, c *config.Config, s store.Store, q *event.Queue) *Hub {
+func New(host, tags, adminTok string, c *config.Config, s store.Store, q *event.Queue) *Hub {
+	c.Defaults()
 	// create all tags
 	l := strings.Split(tags, ",")
 	tagList := []string{}
 	for _, t := range l {
 		tagList = append(tagList, strings.TrimSpace(t))
 	}
-	basePath, err := path.Expand(basePath)
+
+	var err error
+	c.Common.WorkspaceRoot, err = path.Expand(c.Common.WorkspaceRoot)
 	if err != nil {
 		log.Fatal("can not set base path", err)
 	}
+	c.Common.StoreRoot, err = path.Expand(c.Common.StoreRoot)
+	if err != nil {
+		log.Fatal("can not set store path", err)
+	}
+
 	h := &Hub{
 		hostID:    host,
 		tags:      tagList,
-		basePath:  basePath,
-		cachePath: filepath.Join(basePath, "fetch_cache"),
-		config:    c,
+		cachePath: filepath.Join(c.Common.StoreRoot, "fetch_cache"),
+		config:    *c,
 		queue:     q,
 		runs:      newRunStore(s),
 	}
@@ -169,7 +175,7 @@ func (h *Hub) AllHosts() map[string]client.HostConfig {
 
 // Config returns the config for this hub
 func (h *Hub) Config() config.Config {
-	return *h.config
+	return h.config
 }
 
 // AllRuns returns all the runs for this hub.

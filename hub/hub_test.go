@@ -38,10 +38,10 @@ func (t *task) Execute(ws *nt.Workspace, opts nt.Opts, updates chan string) (int
 func TestExecuteNode(t *testing.T) {
 	s := store.NewMemStore()
 	h := Hub{
-		basePath: "/foo/bar",
-		queue:    &event.Queue{},
-		runs:     newRunStore(s),
+		queue: &event.Queue{},
+		runs:  newRunStore(s),
 	}
+	h.config.Common.WorkspaceRoot = "/foo/bar"
 	runRef := event.RunRef{
 		FlowRef: config.FlowRef{
 			ID: "testflow",
@@ -143,7 +143,7 @@ func TestHubEvents(t *testing.T) {
 	q := &event.Queue{}
 
 	// make a new hub
-	New("h1", "master", "~/floe", "admintok", c, s, q)
+	New("h1", "master", "admintok", c, s, q)
 
 	to := &testObs{
 		ch: make(chan event.Event, 2),
@@ -311,7 +311,7 @@ func TestHubData(t *testing.T) {
 	q.Register(to)
 
 	// make a new hub
-	New("h2", "master", "~/floe", "admintok", c, s, q)
+	New("h2", "master", "admintok", c, s, q)
 
 	// start the flow
 	// add an external event whose opts dont match those needed by git-merge so will error
