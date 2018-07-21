@@ -204,7 +204,7 @@ Launch the floe you have downloaded or built but point it at a config and root f
 
 `floe -tags=linux,go,couch -admin=123456 -host_name=h1 -conf=/somepath/testfloe/config.yml -root=/somepath/testfloe/testfloe/ws -pub_bind=127.0.0.1:8080`
 
-TODO 
+TODO more info
 
 Deploying to AWS
 ----------------
