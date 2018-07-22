@@ -69,7 +69,7 @@ type Hub struct {
 }
 
 // New creates a new hub with the given config
-func New(host, tags, adminTok string, c *config.Config, s store.Store, q *event.Queue) *Hub {
+func New(host, tags, adminTok string, c *config.Config, storage store.Store, q *event.Queue) *Hub {
 	c.Defaults()
 	// create all tags
 	l := strings.Split(tags, ",")
@@ -94,7 +94,7 @@ func New(host, tags, adminTok string, c *config.Config, s store.Store, q *event.
 		cachePath: filepath.Join(c.Common.StoreRoot, "fetch_cache"),
 		config:    *c,
 		queue:     q,
-		runs:      newRunStore(s),
+		runs:      newRunStore(storage),
 	}
 	// make sure the cache exists
 	err = os.MkdirAll(h.cachePath, 0700)
@@ -102,11 +102,11 @@ func New(host, tags, adminTok string, c *config.Config, s store.Store, q *event.
 		log.Fatal("can not create the cache path", err)
 	}
 
-	h.timers = newTimers(h)
+	h.timers = newTimers(q)
 	// setup hosts
 	h.setupHosts(adminTok)
 	// set up any timed triggers
-	h.timedTriggers()
+	h.launchTimedTriggers(storage)
 	// hub subscribes to its own queue
 	h.queue.Register(h)
 	// start checking the pending queue
@@ -205,11 +205,20 @@ func (h *Hub) setupHosts(adminTok string) {
 	}
 }
 
-func (h *Hub) timedTriggers() {
+func (h *Hub) launchTimedTriggers(storage store.Store) {
 	for _, f := range h.config.Flows {
 		for _, t := range f.Triggers {
-			if t.Type == "timer" || t.Type == "repo" {
-				h.timers.register(config.FlowRef{ID: f.ID, Ver: f.Ver}, t.ID, t.Opts)
+			ref := config.FlowRef{ID: f.ID, Ver: f.Ver}
+			switch t.Type {
+			case "timer":
+				h.timers.register(ref, t.ID, t.Opts, startFlowTrigger)
+			case "poll-git":
+				rp := newRepoPoller(storage, t.ID, t.Opts)
+				if rp == nil {
+					log.Errorf("<%s> - could not set up repo poller for trigger: %s", ref, t.ID)
+					continue
+				}
+				h.timers.register(ref, t.ID, t.Opts, rp.timer)
 			}
 		}
 	}

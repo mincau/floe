@@ -59,8 +59,8 @@ func (t *node) Execute(ws *nt.Workspace, opts nt.Opts, output chan string) (int,
 	if n == nil {
 		return 255, nil, fmt.Errorf("no node type found: %s", t.Type)
 	}
-	// combine any event options with the preset options from the config
-	inOpts := nt.MergeOpts(t.Opts, opts)
+	// combine any event options with the overriding preset options from the config
+	inOpts := nt.MergeOpts(opts, t.Opts)
 	status, opts, err := n.Execute(ws, inOpts, output)
 	if err != nil && t.IgnoreFail {
 		err = nil
@@ -128,8 +128,9 @@ func (t *node) matchedTriggers(eType string, opts *nt.Opts) bool {
 		return false
 	}
 	n := nt.GetNodeType(eType)
+	// if there is no type registered then there is no matching logic
 	if n == nil {
-		return false
+		return true
 	}
 	// compare config options with the event options
 	return n.Match(t.Opts, *opts)

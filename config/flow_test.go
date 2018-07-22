@@ -66,35 +66,35 @@ func TestMatchTag(t *testing.T) {
 	}
 }
 
-func TestGetRefType(t *testing.T) {
+func TestGetURLType(t *testing.T) {
 	t.Parallel()
 
 	fxs := []struct {
-		ref string
+		url string
 		typ string
 	}{
 		{
-			ref: "/foo/bar/fl.yaml",
+			url: "/foo/bar/fl.yaml",
 			typ: "local",
 		},
 		{
-			ref: "git@github.com:floeit/floe.git/build/FLOE.yaml",
+			url: "git@github.com:floeit/floe.git/build/FLOE.yaml",
 			typ: "git",
 		},
 		{
-			ref: "http://foo/bar/ml.yaml",
+			url: "http://foo/bar/ml.yaml",
 			typ: "web",
 		},
 		{
-			ref: "https://foo/bar/ml.yaml",
+			url: "https://foo/bar/ml.yaml",
 			typ: "web",
 		},
 	}
 
 	for i, fx := range fxs {
-		typ := getRefType(fx.ref)
+		typ := getURLType(fx.url)
 		if typ != fx.typ {
-			t.Errorf("%d - got wrong type wanted: <%s>, got: <%s>, for file: <%s>cent2cent", i, fx.typ, typ, fx.ref)
+			t.Errorf("%d - got wrong type wanted: <%s>, got: <%s>, for file: <%s>cent2cent", i, fx.typ, typ, fx.url)
 		}
 	}
 }
@@ -185,11 +185,11 @@ func TestLoad(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	for _, name := range []string{tf.Name(), fmt.Sprintf("http://127.0.0.1:%d/{{ref}}.txt", port)} {
+	for _, name := range []string{tf.Name(), fmt.Sprintf("http://127.0.0.1:%d/get-file.txt", port)} {
 		f := &Flow{
 			FlowFile: name,
 		}
-		err = f.Load(tmpCache, "get-file")
+		err = f.Load(tmpCache)
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -100,16 +100,27 @@ flows:
         - name: start
           type: data
           opts:
+            url: git@github.com:danmux/danmux-hugo.git
             form:
               title: Start
               fields:
-                - id: ref # ref is a magic name that the git-checkout task type will use
-                  prompt: Git Ref (branch or hash etc)
+                - id: branch
+                  prompt: Branch
                   type: text
         
         - name: Every 5 Minutes
           type: timer                # fires every period seconds
           opts:
             period: 300              # how often to fire in seconds
+            url: git@github.com:danmux/danmux-hugo.git
+            branch: master
 
+        - name: Commits
+          type: poll-git
+          opts:
+            period: 10                                 # check every 10 seconds
+            url: git@github.com:danmux/danmux-hugo.git # the repo to check
+            refs: "refs/heads/*"                       # the refs pattern to match
+            exclude-refs: "refs/heads/master"
+            
       flow-file: floe.yml            # get the actual flow from this file

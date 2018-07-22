@@ -28,9 +28,12 @@ func TestNodeExec(t *testing.T) {
 	}
 
 	status, _, err := n.Execute(&nt.Workspace{}, nt.Opts{}, output)
-	println(status)
-	println(err)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if status != 0 {
+		t.Error("wrong status", status)
+	}
 	close(output)
 	<-captured
-	println(cl)
 }

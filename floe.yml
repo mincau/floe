@@ -9,7 +9,6 @@ tasks:
     listen: trigger.good
     type: git-checkout
     opts:
-      url: git@github.com:floeit/floe.git
       sub-dir: src/github.com/floeit
   
   - name: Go Version

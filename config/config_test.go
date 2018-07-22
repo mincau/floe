@@ -88,9 +88,10 @@ func TestZeroNID(t *testing.T) {
 }
 
 var in = []byte(`
-config:
+common:
     hosts:
-        - name-or.ip.of.other.host 
+      - name-or.ip.of.other.host 
+    workspace-root: "%tmp/floe"
 
 flows:
     - id: build-project              # the name of this flow
@@ -194,19 +195,19 @@ func TestYaml(t *testing.T) {
 	for _, ff = range fns {
 		break
 	}
-	ns := ff.Matched
-	if len(ns) != 1 {
-		t.Fatal("did not find the nodes based on this sub", len(ns))
+	n := ff.Matched
+	if n == nil {
+		t.Fatal("did not find the nodes based on this sub")
 	}
-	if ns[0].FlowRef().ID != "build-project" {
-		t.Error("flow ID not correct", ns[0].FlowRef().ID)
+	if n.FlowRef().ID != "build-project" {
+		t.Error("flow ID not correct", n.FlowRef().ID)
 	}
-	if ns[0].FlowRef().Ver != 1 {
-		t.Error("flow Ver not correct", ns[0].FlowRef().Ver)
+	if n.FlowRef().Ver != 1 {
+		t.Error("flow Ver not correct", n.FlowRef().Ver)
 	}
 
 	// test finding a node in the known flow
-	ns = ff.Flow.MatchTag("trigger.good")
+	ns := ff.Flow.MatchTag("trigger.good")
 	if ns[0].NodeRef().Class != NcTask {
 		t.Error("got wrong node class")
 	}

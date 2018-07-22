@@ -8,11 +8,12 @@ import (
 )
 
 type gitOpts struct {
-	URL     string `json:"url"`
-	SubDir  string `json:"sub-dir"`
-	Ref     string `json:"ref"`      // what to checkout
-	FromRef string `json:"from-ref"` // what to checkout and rebase onto Ref
-	KeyFile string `json:"key-file"` // what key file to use
+	URL        string `json:"url"`         // the repo URL
+	SubDir     string `json:"sub-dir"`     // the sub dir to check into
+	Branch     string `json:"branch"`      // what to checkout
+	Hash       string `json:"hash"`        // the exact hash for repeatability
+	FromBranch string `json:"from-branch"` // what to checkout and rebase onto Ref
+	KeyFile    string `json:"key-file"`    // what key file to use
 }
 
 // gitMerge is an executable node that checks out a hash and then
@@ -34,16 +35,16 @@ func (g gitMerge) Execute(ws *Workspace, in Opts, output chan string) (int, Opts
 	if gop.URL == "" {
 		return 255, nil, fmt.Errorf("problem getting git url option")
 	}
-	if gop.Ref == "" {
+	if gop.Branch == "" {
 		return 255, nil, fmt.Errorf("problem getting ref option")
 	}
-	if gop.FromRef == "" {
+	if gop.FromBranch == "" {
 		return 255, nil, fmt.Errorf("problem getting from ref option")
 	}
 
-	output <- "git checkout: " + gop.URL + " merge into: " + gop.Ref + " from: " + gop.FromRef
+	output <- "git checkout: " + gop.URL + " merge into: " + gop.Branch + " from: " + gop.FromBranch
 
-	log.Debug("GIT merge ", gop.URL, " merge into: ", gop.Ref, " from: ", gop.FromRef)
+	log.Debug("GIT merge ", gop.URL, " merge into: ", gop.Branch, " from: ", gop.FromBranch)
 	return 0, nil, nil
 }
 
@@ -60,14 +61,14 @@ func (g gitCheckout) Execute(ws *Workspace, in Opts, output chan string) (int, O
 	if err != nil {
 		return 255, nil, err
 	}
-	if gop.Ref == "" {
-		return 255, nil, fmt.Errorf("problem getting ref option")
+	if gop.Branch == "" {
+		return 255, nil, fmt.Errorf("problem getting branch option")
 	}
 	if gop.URL == "" {
 		return 255, nil, fmt.Errorf("problem getting git url option")
 	}
 
-	log.Debug("GIT clone ", gop.URL, "into:", gop.Ref, "into:", gop.SubDir)
+	log.Debug("GIT clone ", gop.URL, "into:", gop.Branch, "into:", gop.SubDir)
 
 	// for testing
 	if gop.URL == "git@github.com:floeit/floe-test.git" {
@@ -81,7 +82,7 @@ func (g gitCheckout) Execute(ws *Workspace, in Opts, output chan string) (int, O
 		env = []string{fmt.Sprintf(`GIT_SSH_COMMAND=ssh -i %s`, gop.KeyFile)}
 	}
 	// git clone --branch mytag0.1 --depth 1 https://example.com/my/repo.git
-	args := []string{"clone", "--branch", gop.Ref, "--depth", "1", gop.URL}
+	args := []string{"clone", "--branch", gop.Branch, "--depth", "1", gop.URL}
 	status := doRun(filepath.Join(ws.BasePath, gop.SubDir), env, output, "git", args...)
 
 	return status, nil, nil

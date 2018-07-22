@@ -45,7 +45,7 @@ func (d Data) PostHandler(queue *event.Queue) httprouter.Handle {
 		}
 
 		sourceNode := config.NodeRef{
-			Class: "exec", // TODO maybe a trigger - so should nt set it
+			Class: "trigger",
 			ID:    o.Form.ID,
 		}
 
@@ -66,7 +66,7 @@ func (d Data) PostHandler(queue *event.Queue) httprouter.Handle {
 		// add a data event - including a specific targeted Run if given
 		queue.Publish(event.Event{
 			RunRef:     rr,
-			Tag:        "inbound.data",
+			Tag:        "inbound.data", // "inbound" is checked before launching a pending, and data will become the type
 			SourceNode: sourceNode,
 			Opts:       o.Form.Values,
 		})

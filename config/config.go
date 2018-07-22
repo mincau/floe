@@ -57,7 +57,7 @@ type FoundFlow struct {
 	// Matched is whatever node cause this flow to be found. It is either the trigger node that
 	// matched the criteria to have found the flow and node, or a list of nodes that matched the
 	// event that
-	Matched []*node
+	Matched *node
 	// the full Flow definition
 	*Flow
 }
@@ -73,12 +73,12 @@ func (c *Config) FindFlowsByTriggers(triggerType string, flow FlowRef, opts nt.O
 				continue
 			}
 		}
-		log.Debugf("config - checking flow: <%s-%d>. with %d triggers", f.ID, f.Ver, len(f.Triggers))
+		log.Debugf("config - checking flow: <%s-%d> with %d triggers", f.ID, f.Ver, len(f.Triggers))
 		// match on other stuff
 		ns := f.matchTriggers(triggerType, &opts)
 		// found some matching nodes for this flow
 		if len(ns) > 0 {
-			log.Debugf("config - found flow: <%s-%d>. with %d matching triggers for %s", f.ID, f.Ver, len(ns), triggerType)
+			log.Debugf("config - found flow: <%s-%d> with %d matching triggers for %s", f.ID, f.Ver, len(ns), triggerType)
 			if len(ns) > 1 {
 				log.Warning("config - triggered flow has too many matching triggers, using first", f.ID, f.Ver, len(ns))
 			}
@@ -91,7 +91,7 @@ func (c *Config) FindFlowsByTriggers(triggerType string, flow FlowRef, opts nt.O
 					Flow: f,
 				}
 			}
-			ff.Matched = []*node{ns[0]} // there should only really be one hence use the first one
+			ff.Matched = ns[0] // there should only really be one hence use the first one
 			res[fr] = ff
 		} else {
 			log.Debugf("config - flow: <%s-%d> no trigger match for %s", f.ID, f.Ver, triggerType)

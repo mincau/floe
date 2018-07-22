@@ -1,7 +1,9 @@
 package git
 
 import (
+	"regexp"
 	"strings"
+	"time"
 
 	"github.com/floeit/floe/exe"
 )
@@ -12,15 +14,26 @@ type logger interface {
 	Error(...interface{})
 }
 
+// Ref contains details of a git reference
+type Ref struct {
+	Name   string
+	Type   string
+	Hash   string
+	Change time.Time
+}
+
 // Hashes stores the result of a GitLS
 type Hashes struct {
 	RepoURL string
-	Hashes  map[string]string
+	Hashes  map[string]Ref
 }
 
 // Ls list a remote repo
-func Ls(log logger, url string) (*Hashes, bool) {
-	gitOut, status := exe.RunOutput(log, "", "git", "ls-remote", url)
+func Ls(log logger, url, pattern, exclude string) (*Hashes, bool) {
+	if pattern == "" {
+		pattern = "refs/*"
+	}
+	gitOut, status := exe.RunOutput(log, "", "git", "ls-remote", "--refs", url, pattern)
 	if status != 0 {
 		return nil, false
 	}
@@ -28,23 +41,48 @@ func Ls(log logger, url string) (*Hashes, bool) {
 		RepoURL: url,
 	}
 
-	parseGitResponse(gitOut, latestHash)
+	// drop the command and blank line
+	parseGitResponse(gitOut[2:], latestHash, exclude)
 	return latestHash, true
 }
 
-func parseGitResponse(lines []string, hashes *Hashes) {
+func parseGitResponse(lines []string, hashes *Hashes, exclude string) {
+	exclude = strings.TrimSpace(exclude)
+	excl, _ := regexp.Compile(exclude)
+
 	// map the lines by branch
-	hashes.Hashes = map[string]string{}
-	for _, l := range lines[2:] { // from 2 onwards 1 = command 0 = empty
+	hashes.Hashes = map[string]Ref{}
+	now := time.Now().UTC()
+	for _, l := range lines { // from 2 onwards 1 = command 0 = empty
 		sl := strings.Fields(l)
 
-		if len(sl) > 1 {
-			dp := strings.Split(sl[1], "/")
-			if len(dp) > 2 {
-				hashes.Hashes[dp[2]] = sl[0]
-			} else if len(dp) == 1 {
-				hashes.Hashes[dp[0]] = sl[0]
-			}
+		if len(sl) < 2 {
+			continue
+		}
+
+		dp := strings.Split(sl[1], "/")
+		if len(dp) < 3 || dp[0] != "refs" {
+			continue
+		}
+
+		if exclude != "" && excl.MatchString(sl[1]) {
+			continue
+		}
+
+		ty := "branch"
+		switch {
+		case strings.HasPrefix(dp[1], "pull"):
+			ty = "pull"
+		case strings.HasPrefix(dp[1], "tag"):
+			ty = "tag"
+		}
+		name := dp[2]
+		name = strings.TrimSuffix(name, "^{}")
+		hashes.Hashes[sl[1]] = Ref{
+			Name:   name,
+			Type:   ty,
+			Hash:   sl[0],
+			Change: now,
 		}
 	}
 }
