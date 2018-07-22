@@ -1,7 +1,9 @@
 package git
 
 import (
+	"regexp"
 	"strings"
+	"time"
 
 	"github.com/floeit/floe/exe"
 )
@@ -14,9 +16,10 @@ type logger interface {
 
 // Ref contains details of a git reference
 type Ref struct {
-	Name string
-	Type string
-	Hash string
+	Name   string
+	Type   string
+	Hash   string
+	Change time.Time
 }
 
 // Hashes stores the result of a GitLS
@@ -26,11 +29,11 @@ type Hashes struct {
 }
 
 // Ls list a remote repo
-func Ls(log logger, url, pattern string) (*Hashes, bool) {
+func Ls(log logger, url, pattern, exclude string) (*Hashes, bool) {
 	if pattern == "" {
 		pattern = "refs/*"
 	}
-	gitOut, status := exe.RunOutput(log, "", "git", "ls-remote", url, pattern)
+	gitOut, status := exe.RunOutput(log, "", "git", "ls-remote", "--refs", url, pattern)
 	if status != 0 {
 		return nil, false
 	}
@@ -39,13 +42,17 @@ func Ls(log logger, url, pattern string) (*Hashes, bool) {
 	}
 
 	// drop the command and blank line
-	parseGitResponse(gitOut[2:], latestHash)
+	parseGitResponse(gitOut[2:], latestHash, exclude)
 	return latestHash, true
 }
 
-func parseGitResponse(lines []string, hashes *Hashes) {
+func parseGitResponse(lines []string, hashes *Hashes, exclude string) {
+	exclude = strings.TrimSpace(exclude)
+	excl, _ := regexp.Compile(exclude)
+
 	// map the lines by branch
 	hashes.Hashes = map[string]Ref{}
+	now := time.Now().UTC()
 	for _, l := range lines { // from 2 onwards 1 = command 0 = empty
 		sl := strings.Fields(l)
 
@@ -55,6 +62,10 @@ func parseGitResponse(lines []string, hashes *Hashes) {
 
 		dp := strings.Split(sl[1], "/")
 		if len(dp) < 3 || dp[0] != "refs" {
+			continue
+		}
+
+		if exclude != "" && excl.MatchString(sl[1]) {
 			continue
 		}
 
@@ -68,10 +79,10 @@ func parseGitResponse(lines []string, hashes *Hashes) {
 		name := dp[2]
 		name = strings.TrimSuffix(name, "^{}")
 		hashes.Hashes[sl[1]] = Ref{
-			Name: name,
-			Type: ty,
-			Hash: sl[0],
+			Name:   name,
+			Type:   ty,
+			Hash:   sl[0],
+			Change: now,
 		}
-
 	}
 }

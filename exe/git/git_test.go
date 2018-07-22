@@ -31,10 +31,10 @@ fbf6240b17cd4aeedd070b6b5461395602708ace	refs/pull/3/head
 
 	st := strings.Split(stashAndGit, "\n")
 	h := Hashes{}
-	parseGitResponse(st, &h)
+	parseGitResponse(st, &h, "poll.*")
 
-	if len(h.Hashes) != len(st)-2 {
-		t.Fatal("HEAD should be ignored")
+	if len(h.Hashes) != len(st)-3 {
+		t.Fatal("HEAD and poll should be ignored")
 	}
 
 	exp := map[string]Ref{

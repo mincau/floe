@@ -2,9 +2,11 @@ package store
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 	"sync"
 
 	"github.com/floeit/floe/path"
@@ -42,8 +44,18 @@ func (m *MemStore) Save(key string, data interface{}) error {
 func (m *MemStore) Load(key string, thing interface{}) error {
 	m.RLock()
 	defer m.RUnlock()
-	d := m.stuff[key]
-	thing = &d
+	d, ok := m.stuff[key]
+	if !ok {
+		return nil
+	}
+	// set the val of the pointer with the stored val
+	val := reflect.Indirect(reflect.ValueOf(thing))
+	sval := reflect.ValueOf(d)
+	if val.Type() != sval.Type() {
+		return errors.New("can not set mismatched types")
+	}
+	val.Set(sval)
+
 	return nil
 }
 
@@ -80,7 +92,18 @@ func (m *LocalStore) Save(key string, data interface{}) error {
 		return err
 	}
 	keyPath := filepath.Join(m.root, key) + ".json"
-	return ioutil.WriteFile(keyPath, b, 0644)
+	err = ioutil.WriteFile(keyPath, b, 0644)
+	if err != nil {
+		if _, ok := err.(*os.PathError); !ok {
+			return err
+		}
+		err = os.MkdirAll(filepath.Dir(keyPath), 0700)
+		if err != nil {
+			return err
+		}
+		return ioutil.WriteFile(keyPath, b, 0644)
+	}
+	return nil
 }
 
 // Load loads data from the key

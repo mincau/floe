@@ -12,7 +12,6 @@ func TestNodeExec(t *testing.T) {
 	cl := 0
 	go func() {
 		for l := range output {
-			println(l)
 			cl++
 		}
 		captured <- true
@@ -28,9 +27,6 @@ func TestNodeExec(t *testing.T) {
 	}
 
 	status, _, err := n.Execute(&nt.Workspace{}, nt.Opts{}, output)
-	println(status)
-	println(err)
 	close(output)
 	<-captured
-	println(cl)
 }

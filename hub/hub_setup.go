@@ -102,11 +102,11 @@ func New(host, tags, adminTok string, c *config.Config, storage store.Store, q *
 		log.Fatal("can not create the cache path", err)
 	}
 
-	h.timers = newTimers(h)
+	h.timers = newTimers(q)
 	// setup hosts
 	h.setupHosts(adminTok)
 	// set up any timed triggers
-	h.launchTimedTriggers()
+	h.launchTimedTriggers(storage)
 	// hub subscribes to its own queue
 	h.queue.Register(h)
 	// start checking the pending queue
@@ -205,7 +205,7 @@ func (h *Hub) setupHosts(adminTok string) {
 	}
 }
 
-func (h *Hub) launchTimedTriggers() {
+func (h *Hub) launchTimedTriggers(storage store.Store) {
 	for _, f := range h.config.Flows {
 		for _, t := range f.Triggers {
 			ref := config.FlowRef{ID: f.ID, Ver: f.Ver}
@@ -213,7 +213,12 @@ func (h *Hub) launchTimedTriggers() {
 			case "timer":
 				h.timers.register(ref, t.ID, t.Opts, startFlowTrigger)
 			case "poll-git":
-				h.timers.register(ref, t.ID, t.Opts, pollRepoTrigger)
+				rp := newRepoPoller(storage, t.ID, t.Opts)
+				if rp == nil {
+					log.Errorf("<%s> - could not set up repo poller for trigger: %s", ref, t.ID)
+					continue
+				}
+				h.timers.register(ref, t.ID, t.Opts, rp.timer)
 			}
 		}
 	}

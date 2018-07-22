@@ -110,20 +110,18 @@ func (h *Hub) pendFlowFromTrigger(e event.Event) error {
 		// make sure the flow has loaded in any references
 		if ff.FlowFile != "" {
 			log.Debugf("<%s> - getting flow from file '%s'", ff.Ref, ff.FlowFile)
-			// grab the ref opts as a string if one exists
-			ref := ""
-			if r, ok := e.Opts["ref"]; ok {
-				ref, _ = r.(string)
-			}
-			err := ff.Load(h.cachePath, ref)
+			err := ff.Load(h.cachePath)
 			if err != nil {
 				log.Errorf("<%s> - could not load in the flow from FlowFile: '%s'", ff.Ref, ff.FlowFile)
 				continue
 			}
 		}
 
+		// get the matched trigger node opts, but override with any mathing from the event
+		opts := nt.MergeOpts(ff.Matched.Opts, e.Opts)
+
 		// add the flow to the pending list making note of the node and opts that triggered it
-		ref, err := h.addToPending(ff.Flow, h.hostID, ff.Matched[0].Ref, e.Opts)
+		ref, err := h.addToPending(ff.Flow, h.hostID, ff.Matched.Ref, opts)
 		if err != nil {
 			return err
 		}

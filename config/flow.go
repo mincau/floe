@@ -84,14 +84,12 @@ func (f *Flow) MatchTag(tag string) []*node {
 
 // Load looks at the FlowFile and loads in the flow from that reference
 // overriding any pre-existing settings, except triggers.
-// The ref param can be used to replace any '{{ref}}' in the FlowFile
-func (f *Flow) Load(cacheDir, ref string) (err error) {
+func (f *Flow) Load(cacheDir string) (err error) {
 	if f.FlowFile == "" {
 		return nil
 	}
-	f.FlowFile = strings.Replace(f.FlowFile, "{{ref}}", ref, -1)
 	var content []byte
-	switch getRefType(f.FlowFile) {
+	switch getURLType(f.FlowFile) {
 	case "local":
 		content, err = ioutil.ReadFile(f.FlowFile)
 	case "web":
@@ -147,11 +145,11 @@ func get(cacheDir, url string) ([]byte, error) {
 	return ioutil.ReadFile(resp.Filename)
 }
 
-// getRefType returns the reference type:
+// getURLType returns the url type:
 // "web" - it is fetchable from the web,
 // "git" - it can be got from a repo,
 // "local" - it can be got from the local files system
-func getRefType(fileRef string) string {
+func getURLType(fileRef string) string {
 	if strings.Contains(fileRef, "git@") {
 		return "git"
 	}
