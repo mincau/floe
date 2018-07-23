@@ -8,11 +8,27 @@ import (
 
 	"github.com/floeit/floe/event"
 	"github.com/floeit/floe/hub"
-	"github.com/floeit/floe/log"
 	"github.com/floeit/floe/server/push"
 )
 
 const rootPath = "/build/api"
+
+var log logger
+
+type logger interface {
+	Error(...interface{})
+	Fatal(...interface{})
+	Debug(...interface{})
+	Warning(...interface{})
+	Debugf(format string, args ...interface{})
+	Errorf(format string, args ...interface{})
+}
+
+// SetLogger sets up the package level logger
+func SetLogger(l logger) {
+	log = l
+	push.SetLogger(l)
+}
 
 type Conf struct {
 	PubBind string

@@ -11,7 +11,6 @@ import (
 	"golang.org/x/net/websocket"
 
 	"github.com/floeit/floe/event"
-	"github.com/floeit/floe/log"
 )
 
 type wsHub struct {

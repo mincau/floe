@@ -3,11 +3,14 @@ package config
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/cavaliercoder/grab"
 
 	nt "github.com/floeit/floe/config/nodetype"
+	"github.com/floeit/floe/exe"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -83,35 +86,38 @@ func (f *Flow) MatchTag(tag string) []*node {
 
 // Load looks at the FlowFile and loads in the flow from that reference
 // overriding any pre-existing settings, except triggers.
-func (f *Flow) Load(cacheDir string) (err error) {
+// The branch parameter is used to checkout the correct branch to get the file from git.
+// The returned out is the captured output from any git command.
+func (f *Flow) Load(cacheDir, branch, keyFile string) (out []string, err error) {
 	if f.FlowFile == "" {
-		return nil
+		return nil, nil
 	}
 	var content []byte
 	switch getURLType(f.FlowFile) {
 	case "local":
 		content, err = ioutil.ReadFile(f.FlowFile)
 	case "web":
-		content, err = get(cacheDir, f.FlowFile)
-	// TODO git - including the branch
+		content, err = getCached(cacheDir, f.FlowFile)
+	case "git":
+		content, out, err = getFromGit(f.ID, f.FlowFile, branch, keyFile)
 	default:
-		return fmt.Errorf("unrecognised floe file type: <%s>", f.FlowFile)
+		return nil, fmt.Errorf("unrecognised floe file type: <%s>", f.FlowFile)
 	}
 	if err != nil {
-		return err
+		return out, err
 	}
 
 	// unmarshal into a flow
 	newFlow := &Flow{}
 	err = yaml.Unmarshal(content, &newFlow)
 	if err != nil {
-		return err
+		return out, err
 	}
 
 	// set up the flow, and copy bits into this flow
 	err = newFlow.zero()
 	if err != nil {
-		return err
+		return out, err
 	}
 	if len(newFlow.Name) != 0 {
 		f.Name = newFlow.Name
@@ -130,11 +136,11 @@ func (f *Flow) Load(cacheDir string) (err error) {
 		f.Tasks = newFlow.Tasks
 	}
 	// Pointless overriding triggers - as they are what caused this load
-	return nil
+	return out, nil
 }
 
-// get gets the file from the web or the cache and returns its contents
-func get(cacheDir, url string) ([]byte, error) {
+// getCached gets the file from the web or the cache and returns its contents
+func getCached(cacheDir, url string) ([]byte, error) {
 	client := grab.NewClient()
 	req, err := grab.NewRequest(cacheDir, url)
 	if err != nil {
@@ -143,6 +149,43 @@ func get(cacheDir, url string) ([]byte, error) {
 	resp := client.Do(req)
 	<-resp.Done
 	return ioutil.ReadFile(resp.Filename)
+}
+
+func splitGitURL(ref string) (url, file string, err error) {
+	div := "/"
+	parts := strings.Split(ref, div)
+	if len(parts) < 3 {
+		return "", "", fmt.Errorf("git url %s did not contain a file", ref)
+	}
+	return strings.Join(parts[0:2], div), strings.Join(parts[2:], div), nil
+}
+
+func getFromGit(flowID, url, branch, keyFile string) ([]byte, []string, error) {
+	url, file, err := splitGitURL(url)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	wd, err := ioutil.TempDir("", flowID)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer os.RemoveAll(wd)
+
+	var env []string
+	if keyFile != "" {
+		env = []string{fmt.Sprintf(`GIT_SSH_COMMAND=ssh -i %s`, keyFile)}
+	}
+	args := []string{"clone", "--branch", branch, "--depth", "1", url, "repo"}
+
+	out, val := exe.RunOutput(env, wd, "git", args...)
+	if val != 0 {
+		return nil, out, fmt.Errorf("git command to get the flow file failed with: %d", val)
+	}
+
+	// Read the file
+	b, err := ioutil.ReadFile(filepath.Join(wd, "repo", file))
+	return b, out, err
 }
 
 // getURLType returns the url type:

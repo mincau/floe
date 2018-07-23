@@ -50,7 +50,7 @@ func TestRepoPoller(t *testing.T) {
 	}
 	q.Register(obs(f))
 
-	p := newRepoPoller(s, "nodeID", o)
+	p := newRepoPoller(s, "nodeID", "", o)
 
 	// first call sets up the refs
 	p.timer(nil, tim)

@@ -8,13 +8,24 @@ import (
 	"strings"
 
 	"github.com/floeit/floe/exe"
-	"github.com/floeit/floe/log"
 )
+
+var log logger
+
+func SetPkgLogger(l logger) {
+	log = l
+}
 
 const (
 	shortRel = "./"
 	wsSub    = "{{ws}}"
 )
+
+type logger interface {
+	Info(...interface{})
+	Debug(...interface{})
+	Error(...interface{})
+}
 
 // exec node executes an external task
 type exec struct {
@@ -92,7 +103,7 @@ func doRun(dir string, env []string, output chan string, cmd string, args ...str
 		stop <- true
 	}()
 
-	status := exe.Run(log.Log{}, out, env, dir, cmd, args...)
+	status := exe.Run(out, env, dir, cmd, args...)
 
 	// wait for output to complete
 	<-stop

@@ -10,7 +10,7 @@ import (
 	"github.com/floeit/floe/client"
 	"github.com/floeit/floe/config"
 	"github.com/floeit/floe/event"
-	"github.com/floeit/floe/log"
+	"github.com/floeit/floe/logger"
 	"github.com/floeit/floe/path"
 	"github.com/floeit/floe/store"
 )
@@ -25,12 +25,22 @@ const (
 	tagNodeStart   = "sys.node.start"    // an executing node has started its job
 	tagStateChange = "sys.state"         // a run has transitioned state
 	tagWaitingData = "sys.data.required" // a node in the run needs data input
+	tagError       = "sys.error"         // a general error event
 	tagGoodTrigger = "trigger.good"      // always issued when a trigger
 
 	inboundPrefix = "inbound" // the tags from any data push events
 )
 
-var zt = time.Time{} // zero time
+var (
+	log *logger.Log
+	zt  = time.Time{} // zero time
+)
+
+// SetLogger sets up the package level logger
+func SetLogger(l *logger.Log) {
+	log = l
+	client.SetLogger(l)
+}
 
 // node definitions
 type refNode interface {

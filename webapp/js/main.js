@@ -51,15 +51,10 @@ function main() {
         if (evt.Type == 'rest' || evt.Type == "top-error") {
             if (evt.Value.Status >= 500 || evt.Type == "top-error") {
                 console.log("error", evt.Type);
-                // TODO consider moving to controller - or a specific error panel?
-                var wrap  = el('#err-wrap');
-                wrap.className = "error show";
                 if (evt.Value.Status >= 500) {
-                    el('#err-msg').innerHTML = "Call to server resulted in: " + evt.Value.Status;
-                    el('#err-content').innerHTML = evt.Value.Response;
+                    topError("Call to server resulted in: " + evt.Value.Status, evt.Value.Response);
                 } else {
-                    el('#err-msg').innerHTML = "Connectivity problem";
-                    el('#err-content').innerHTML = evt.Value;
+                    topError("Connectivity problem", evt.Value);
                 }
                 return
             }
@@ -139,6 +134,8 @@ function main() {
             ) {
                     controller.NotifyPanel("flow", evt);
                     controller.NotifyPanel("flow-single", evt);
+            } else if (evt.Msg.Tag == "sys.error") {
+                topError("Server error: "+evt.Msg.Opts.error, evt.Msg.Opts.info);
             }
         }
     });
@@ -149,6 +146,16 @@ function main() {
 
 function notFound() {
     return '<h1>404 Not found :/</h1>';
+}
+
+function topError(title, message) {
+    var wrap  = el('#err-wrap');
+    wrap.className = "error show";
+    el('#err-msg').innerHTML = title;
+    if (Array.isArray(message)) {
+        message = message.join("<br>")
+    }
+    el('#err-content').innerHTML =message;
 }
 
 main();

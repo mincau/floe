@@ -3,8 +3,6 @@ package nodetype
 import (
 	"fmt"
 	"path/filepath"
-
-	"github.com/floeit/floe/log"
 )
 
 type gitOpts struct {
@@ -44,7 +42,6 @@ func (g gitMerge) Execute(ws *Workspace, in Opts, output chan string) (int, Opts
 
 	output <- "git checkout: " + gop.URL + " merge into: " + gop.Branch + " from: " + gop.FromBranch
 
-	log.Debug("GIT merge ", gop.URL, " merge into: ", gop.Branch, " from: ", gop.FromBranch)
 	return 0, nil, nil
 }
 
@@ -67,8 +64,6 @@ func (g gitCheckout) Execute(ws *Workspace, in Opts, output chan string) (int, O
 	if gop.URL == "" {
 		return 255, nil, fmt.Errorf("problem getting git url option")
 	}
-
-	log.Debug("GIT clone ", gop.URL, "into:", gop.Branch, "into:", gop.SubDir)
 
 	// for testing
 	if gop.URL == "git@github.com:floeit/floe-test.git" {

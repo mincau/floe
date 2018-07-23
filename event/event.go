@@ -7,10 +7,20 @@ import (
 
 	"github.com/floeit/floe/config"
 	nt "github.com/floeit/floe/config/nodetype"
-	"github.com/floeit/floe/log"
 )
 
 const sysPrefix = "sys." // all internal events that nodes can not see
+
+var log logger
+
+type logger interface {
+	Debugf(format string, args ...interface{})
+}
+
+// SetLogger sets up the package level logger
+func SetLogger(l logger) {
+	log = l
+}
 
 // HostedIDRef is any ID unique within the scope of the host that created it.
 type HostedIDRef struct {

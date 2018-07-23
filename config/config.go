@@ -6,8 +6,19 @@ import (
 	"gopkg.in/yaml.v2"
 
 	nt "github.com/floeit/floe/config/nodetype"
-	"github.com/floeit/floe/log"
 )
+
+var log logger
+
+type logger interface {
+	Warning(...interface{})
+	Debugf(format string, args ...interface{})
+}
+
+// SetLogger sets up the package level logger
+func SetLogger(l logger) {
+	log = l
+}
 
 // Config is the set of nodes and rules
 type Config struct {

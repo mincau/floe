@@ -5,8 +5,14 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"os"
 	"testing"
 )
+
+func TestMain(m *testing.M) {
+	setupLog()
+	os.Exit(m.Run())
+}
 
 var flow = &Flow{
 	Name: "flow-1",
@@ -189,9 +195,12 @@ func TestLoad(t *testing.T) {
 		f := &Flow{
 			FlowFile: name,
 		}
-		err = f.Load(tmpCache)
+		out, err := f.Load(tmpCache, "", "")
 		if err != nil {
 			t.Fatal(err)
+		}
+		if len(out) != 0 {
+			t.Error("got some output", out)
 		}
 
 		tag := "merge.builds.good"
@@ -220,4 +229,17 @@ func serveFiles(portChan chan int) {
 	})
 	portChan <- listener.Addr().(*net.TCPAddr).Port
 	http.Serve(listener, mux)
+}
+
+func TestSplitGitURL(t *testing.T) {
+	url, file, err := splitGitURL("git@github.com:floeit/floe.git/dev/floe.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if url != "git@github.com:floeit/floe.git" {
+		t.Error("url wrong", url)
+	}
+	if file != "dev/floe.yml" {
+		t.Error("url file", file)
+	}
 }

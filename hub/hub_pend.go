@@ -9,7 +9,6 @@ import (
 	"github.com/floeit/floe/config"
 	nt "github.com/floeit/floe/config/nodetype"
 	"github.com/floeit/floe/event"
-	"github.com/floeit/floe/log"
 )
 
 // This file contains all functions that deal with events that may or may not
@@ -110,9 +109,27 @@ func (h *Hub) pendFlowFromTrigger(e event.Event) error {
 		// make sure the flow has loaded in any references
 		if ff.FlowFile != "" {
 			log.Debugf("<%s> - getting flow from file '%s'", ff.Ref, ff.FlowFile)
-			err := ff.Load(h.cachePath)
+
+			// grab the ref opts as a string if one exists so that we get the right flow file
+			// from the branch that triggered this flow
+			branch := ""
+			if r, ok := e.Opts["branch"]; ok {
+				branch, _ = r.(string)
+			}
+			output, err := ff.Load(h.cachePath, branch, h.config.Common.GitKey)
 			if err != nil {
-				log.Errorf("<%s> - could not load in the flow from FlowFile: '%s'", ff.Ref, ff.FlowFile)
+				log.Errorf("<%s> - could not load in the flow from FlowFile: <%s>, err: <%s>", ff.Ref, ff.FlowFile, err)
+				h.queue.Publish(event.Event{
+					RunRef: event.RunRef{
+						FlowRef: ff.Ref,
+					},
+					Tag: tagError,
+					Opts: nt.Opts{
+						"error": err.Error(),
+						"info":  output,
+					},
+					Good: false,
+				})
 				continue
 			}
 		}

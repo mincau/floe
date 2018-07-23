@@ -14,7 +14,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/floeit/floe/hub"
-	"github.com/floeit/floe/log"
 )
 
 const (

@@ -20,7 +20,7 @@ func TestRun(t *testing.T) {
 		rangeDone <- true
 	}()
 
-	status := Run(&tLog{t: t}, out, nil, ".", "echo", "hello world")
+	status := Run(out, nil, ".", "echo", "hello world")
 
 	if status != 0 {
 		t.Error("echo failed", status)
@@ -33,7 +33,7 @@ func TestRun(t *testing.T) {
 
 	// confirm bad command fails no command found
 	out = make(chan string, 100)
-	status = Run(&tLog{t: t}, out, nil, "", "echop", `hello world`)
+	status = Run(out, nil, "", "echop", `hello world`)
 	if status != 1 {
 		t.Error("status should have been 1", status)
 	}
@@ -42,7 +42,7 @@ func TestRun(t *testing.T) {
 func TestRunOutput(t *testing.T) {
 	t.Parallel()
 
-	out, status := RunOutput(&tLog{t: t}, nil, "", "bash", "-c", `echo "hello world"`)
+	out, status := RunOutput(nil, "", "bash", "-c", `echo "hello world"`)
 	if status != 0 {
 		t.Error("echo failed", status)
 	}
@@ -57,7 +57,7 @@ func TestRunOutput(t *testing.T) {
 func TestRunLongOutput(t *testing.T) {
 	t.Parallel()
 
-	out, status := RunOutput(&tLog{t: t}, nil, "", "bash", "-c", `for i in {1..50}; do echo "hello line number $i"; done`)
+	out, status := RunOutput(nil, "", "bash", "-c", `for i in {1..50}; do echo "hello line number $i"; done`)
 	if status != 0 {
 		t.Error("echo failed", status)
 	}
@@ -68,26 +68,6 @@ func TestRunLongOutput(t *testing.T) {
 	if len(out) != 52 {
 		t.Errorf("bad output: %d", len(out))
 	}
-}
-
-type tLog struct {
-	t *testing.T
-}
-
-func (l *tLog) Info(args ...interface{}) {
-	args = append([]interface{}{"INFO"}, args...)
-	l.t.Log(args...)
-}
-func (l *tLog) Debug(args ...interface{}) {
-	args = append([]interface{}{"DEBUG"}, args...)
-	l.t.Log(args...)
-}
-func (l *tLog) Error(args ...interface{}) {
-	args = append([]interface{}{"ERROR"}, args...)
-	l.t.Log(args...)
-}
-func (l *tLog) Infof(format string, args ...interface{}) {
-	l.t.Logf("INFO - "+format, args...)
 }
 
 func TestPlay(t *testing.T) {

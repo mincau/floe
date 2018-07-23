@@ -30,7 +30,7 @@ type Hashes struct {
 }
 
 // Ls list a remote repo
-func Ls(log logger, url, pattern, exclude, gitKey string) (*Hashes, bool) {
+func Ls(url, pattern, exclude, gitKey string) (*Hashes, bool) {
 	if pattern == "" {
 		pattern = "refs/*"
 	}
@@ -40,7 +40,7 @@ func Ls(log logger, url, pattern, exclude, gitKey string) (*Hashes, bool) {
 		env = []string{fmt.Sprintf(`GIT_SSH_COMMAND=ssh -i %s`, gitKey)}
 	}
 
-	gitOut, status := exe.RunOutput(log, env, "", "git", "ls-remote", "--refs", url, pattern)
+	gitOut, status := exe.RunOutput(env, "", "git", "ls-remote", "--refs", url, pattern)
 	if status != 0 {
 		return nil, false
 	}

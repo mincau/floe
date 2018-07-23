@@ -15,8 +15,20 @@ import (
 	"github.com/floeit/floe/config"
 	nt "github.com/floeit/floe/config/nodetype"
 	"github.com/floeit/floe/event"
-	"github.com/floeit/floe/log"
 )
+
+var log logger
+
+type logger interface {
+	Error(...interface{})
+	Errorf(format string, args ...interface{})
+	Debugf(format string, args ...interface{})
+}
+
+// SetLogger sets up the package level logger
+func SetLogger(l logger) {
+	log = l
+}
 
 // HostConfig the public config data of a host
 type HostConfig struct {

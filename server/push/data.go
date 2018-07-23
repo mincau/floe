@@ -11,8 +11,20 @@ import (
 	"github.com/floeit/floe/config"
 	nt "github.com/floeit/floe/config/nodetype"
 	"github.com/floeit/floe/event"
-	"github.com/floeit/floe/log"
 )
+
+var log logger
+
+type logger interface {
+	Error(...interface{})
+	Debug(...interface{})
+	Debugf(format string, args ...interface{})
+}
+
+// SetLogger sets up the package level logger
+func SetLogger(l logger) {
+	log = l
+}
 
 // Data is the push data endpoint handler
 type Data struct{}

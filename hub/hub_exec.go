@@ -7,7 +7,6 @@ import (
 	"github.com/floeit/floe/config"
 	nt "github.com/floeit/floe/config/nodetype"
 	"github.com/floeit/floe/event"
-	"github.com/floeit/floe/log"
 )
 
 // ExecutePending executes a pending on this host if this host has no conflicts.

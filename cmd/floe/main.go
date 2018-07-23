@@ -10,13 +10,15 @@ import (
 	"github.com/floeit/floe/config"
 	"github.com/floeit/floe/event"
 	"github.com/floeit/floe/hub"
-	"github.com/floeit/floe/log"
+	"github.com/floeit/floe/logger"
 	"github.com/floeit/floe/path"
 	"github.com/floeit/floe/server"
 	"github.com/floeit/floe/store"
 )
 
 func main() {
+	log := logger.NewStdErrLogger()
+	setupPackageLogger(log)
 	c := srvConf{}
 	flag.StringVar(&c.ConfFile, "conf", "config.yml", "the host config yaml")
 	flag.StringVar(&c.HostName, "host_name", "h1", "a short host name to use in id creation and routing")
@@ -89,4 +91,11 @@ func start(sc srvConf, conf []byte, addr chan string) error {
 
 	server.LaunchWeb(sc.Conf, c.Common.BaseURL, hub, q, addr, sc.WebDev)
 	return nil
+}
+
+func setupPackageLogger(l *logger.Log) {
+	hub.SetLogger(l)
+	server.SetLogger(l)
+	event.SetLogger(l)
+	config.SetLogger(l)
 }

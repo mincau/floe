@@ -9,7 +9,6 @@ import (
 	nt "github.com/floeit/floe/config/nodetype"
 	"github.com/floeit/floe/event"
 	"github.com/floeit/floe/exe/git"
-	"github.com/floeit/floe/log"
 	"github.com/floeit/floe/store"
 )
 
@@ -125,7 +124,8 @@ func (r *repoPoller) timer(q *event.Queue, tim *timer) {
 		log.Errorf("<%s> - could not load previous refs: %s", tim.flow, err)
 	}
 
-	new, ok := git.Ls(log.Log{}, r.url, r.refs, r.exclude, r.gitKey)
+	log.Debugf("<%s> - checking repo <%s> for changes matching <%s>", tim.flow, r.url, r.refs)
+	new, ok := git.Ls(r.url, r.refs, r.exclude, r.gitKey)
 	if !ok {
 		log.Errorf("<%s> - could not get new refs: %s", tim.flow, err)
 	}

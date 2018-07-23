@@ -37,7 +37,7 @@ flows:
             url: git@github.com:floeit/floe.git        # the repo to check
             refs: "refs/heads/*"                       # the refs pattern to match
             
-      flow-file: /home/ubuntu/floe/floe.yml            # get the actual flow from this file
+      flow-file: git@github.com:floeit/floe.git/dev/floe.yml   # get the actual flow from this file
 
       
     

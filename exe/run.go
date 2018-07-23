@@ -9,15 +9,9 @@ import (
 	"syscall"
 )
 
-type logger interface {
-	Info(...interface{})
-	Debug(...interface{})
-	Error(...interface{})
-}
-
 // RunOutput executes the command in a bash process capturing the output and
 // returning it in the string slice
-func RunOutput(log logger, env []string, wd, cmd string, args ...string) ([]string, int) {
+func RunOutput(env []string, wd, cmd string, args ...string) ([]string, int) {
 	var output []string
 
 	out := make(chan string)
@@ -29,7 +23,7 @@ func RunOutput(log logger, env []string, wd, cmd string, args ...string) ([]stri
 		rangeDone <- true
 	}()
 
-	status := Run(log, out, env, wd, cmd, args...)
+	status := Run(out, env, wd, cmd, args...)
 
 	<-rangeDone
 
@@ -37,14 +31,14 @@ func RunOutput(log logger, env []string, wd, cmd string, args ...string) ([]stri
 }
 
 // Run executes the command in a bash process
-func Run(log logger, out chan string, env []string, wd, cmd string, args ...string) int {
-
-	log.Info("Exec Cmd:", cmd, "Args:", args)
+func Run(out chan string, env []string, wd, cmd string, args ...string) int {
+	out <- cmd + " " + strings.Join(args, " ")
+	out <- ""
 
 	if wd != "" {
 		// make sure working directory is in place
 		if err := os.MkdirAll(wd, 0700); err != nil {
-			log.Error(err)
+			out <- err.Error()
 			return 1
 		}
 	}
@@ -56,11 +50,6 @@ func Run(log logger, out chan string, env []string, wd, cmd string, args ...stri
 
 	// this is mandatory
 	eCmd.Dir = wd
-	log.Info("In working directory:", eCmd.Dir)
-	log.Info("Env vars:", eCmd.Env)
-
-	out <- cmd + " " + strings.Join(args, " ")
-	out <- ""
 
 	// safely aggregate both to a single reader
 	pr, pw := io.Pipe()
@@ -80,17 +69,14 @@ func Run(log logger, out chan string, env []string, wd, cmd string, args ...stri
 		scanDone <- true
 	}()
 
-	log.Debug("Exec starting")
 	err := eCmd.Start()
 	if err != nil {
-		log.Error("start failed", err)
 		out <- err.Error()
 		out <- ""
 		close(out)
 		return 1
 	}
 
-	log.Debug("Exec waiting")
 	err = eCmd.Wait()
 
 	// close the writer pipe
@@ -103,21 +89,16 @@ func Run(log logger, out chan string, env []string, wd, cmd string, args ...stri
 	<-scanDone
 	close(out)
 
-	log.Debug("exec cmd complete")
-
 	if err != nil {
-		log.Error("Command failed:", err)
 		exitCode := 1
 		if msg, ok := err.(*exec.ExitError); ok {
 			if status, ok := msg.Sys().(syscall.WaitStatus); ok {
 				exitCode = status.ExitStatus()
-				log.Info("exit status: ", exitCode)
 			}
 		}
 		// we prefer to return 0 for good or one for bad
 		return exitCode
 	}
 
-	log.Info("Executing command succeeded")
 	return 0
 }

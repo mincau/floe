@@ -1,6 +1,7 @@
 package hub
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -9,8 +10,20 @@ import (
 	"github.com/floeit/floe/config"
 	nt "github.com/floeit/floe/config/nodetype"
 	"github.com/floeit/floe/event"
+	"github.com/floeit/floe/logger"
 	"github.com/floeit/floe/store"
 )
+
+var lg sync.Once
+
+func TestMain(m *testing.M) {
+	lg.Do(func() {
+		log = logger.NewCaptureLogger()
+		event.SetLogger(log)
+		config.SetLogger(log)
+	})
+	os.Exit(m.Run())
+}
 
 type task struct {
 	exec func(ws *nt.Workspace, updates chan string)

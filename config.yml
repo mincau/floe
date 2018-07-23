@@ -123,4 +123,4 @@ flows:
             refs: "refs/heads/*"                       # the refs pattern to match
             exclude-refs: "refs/heads/master"
             
-      flow-file: floe.yml            # get the actual flow from this file
+      flow-file: git@github.com:floeit/floe.git/floe.yml            # get the actual flow from this file

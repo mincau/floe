@@ -13,7 +13,7 @@ import (
 
 	"github.com/floeit/floe/config"
 	nt "github.com/floeit/floe/config/nodetype"
-	"github.com/floeit/floe/log"
+	"github.com/floeit/floe/logger"
 )
 
 const adminToken = "a-test-admin-token"
@@ -200,7 +200,6 @@ flows:
           ignore-fail: false    
 `)
 
-	log.SetLevel(8)
 	basePath := "/build/api"
 	addr := "127.0.0.1:0"
 
@@ -238,6 +237,8 @@ flows:
 
 func setup(t *testing.T) {
 	once.Do(func() {
+		log := logger.NewStdErrLogger()
+		setupPackageLogger(log)
 		setupWeb(t)
 	})
 }

@@ -1,6 +1,20 @@
 package event
 
-import "testing"
+import (
+	golog "log"
+	"os"
+	"sync"
+	"testing"
+)
+
+var lg sync.Once
+
+func TestMain(m *testing.M) {
+	lg.Do(func() {
+		log = &tLog{}
+	})
+	os.Exit(m.Run())
+}
 
 type listener struct {
 	what func(e Event)
@@ -45,11 +59,10 @@ func TestQueue(t *testing.T) {
 	}
 }
 
-
 func TestIsSystem(t *testing.T) {
-	fix := []struct{
+	fix := []struct {
 		tag string
-		is bool
+		is  bool
 	}{
 		{"", false},
 		{"fo", false},
@@ -63,17 +76,17 @@ func TestIsSystem(t *testing.T) {
 		if e.IsSystem() != f.is {
 			t.Errorf("%d - tag %s should have had IsSystem: %v", i, f.tag, f.is)
 		}
-	}	
+	}
 }
 
-// The following benchmarks illustrate the relative performances of 
+// The following benchmarks illustrate the relative performances of
 // passing th reference by value or as a pointer.
 // as of 2017/11 there is 1ns in it...
 // BenchmarkRunRefPBR-8   	500000000	         3.15 ns/op
 // BenchmarkRunRefPBV-8   	300000000	         4.32 ns/op
 func BenchmarkRunRefPBP(b *testing.B) {
 
-	notnop := func (r *RunRef) {
+	notnop := func(r *RunRef) {
 		r.ExecHost = "" // hopefully avoid any optimisers?
 	}
 
@@ -85,7 +98,7 @@ func BenchmarkRunRefPBP(b *testing.B) {
 
 func BenchmarkRunRefPBV(b *testing.B) {
 
-	notnop := func (r RunRef) {
+	notnop := func(r RunRef) {
 		r.ExecHost = "" // hopefully avoid any optimisers?
 	}
 
@@ -93,4 +106,10 @@ func BenchmarkRunRefPBV(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		notnop(r)
 	}
+}
+
+type tLog struct{}
+
+func (l *tLog) Debugf(format string, args ...interface{}) {
+	golog.Printf("DEBUG - "+format+"\n", args...)
 }
