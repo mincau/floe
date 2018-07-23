@@ -17,7 +17,7 @@ type logger interface {
 
 // RunOutput executes the command in a bash process capturing the output and
 // returning it in the string slice
-func RunOutput(log logger, wd, cmd string, args ...string) ([]string, int) {
+func RunOutput(log logger, env []string, wd, cmd string, args ...string) ([]string, int) {
 	var output []string
 
 	out := make(chan string)
@@ -29,7 +29,7 @@ func RunOutput(log logger, wd, cmd string, args ...string) ([]string, int) {
 		rangeDone <- true
 	}()
 
-	status := Run(log, out, nil, wd, cmd, args...)
+	status := Run(log, out, env, wd, cmd, args...)
 
 	<-rangeDone
 
@@ -57,6 +57,7 @@ func Run(log logger, out chan string, env []string, wd, cmd string, args ...stri
 	// this is mandatory
 	eCmd.Dir = wd
 	log.Info("In working directory:", eCmd.Dir)
+	log.Info("Env vars:", eCmd.Env)
 
 	out <- cmd + " " + strings.Join(args, " ")
 	out <- ""

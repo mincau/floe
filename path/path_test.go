@@ -1,7 +1,7 @@
 package path
 
 import (
-	"os/user"
+	"os"
 	"strings"
 	"testing"
 )
@@ -9,8 +9,7 @@ import (
 func TestExpandPath(t *testing.T) {
 	t.Parallel()
 
-	usr, _ := user.Current()
-	hd := usr.HomeDir
+	hd := os.Getenv("HOME")
 
 	fix := []struct {
 		in  string

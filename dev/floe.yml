@@ -1,0 +1,53 @@
+id: floe
+host-tags: [linux, go, couch]   # all these tags must match the tags on any host for it to be able to run there
+env:
+  - GOPATH=./
+  - GOROOT=./go
+  - PATH=./go/bin:$PATH
+ver: 1
+
+tasks:
+  - name: Checkout
+    listen: trigger.good
+    type: git-checkout
+    opts:
+      url: git@github.com:floeit/floe.git
+      sub-dir: src/github.com/floeit
+
+  - name: Download Go
+    listen: task.checkout.good
+    type: fetch
+    opts:
+      url: "https://dl.google.com/go/go1.10.2.linux-amd64.tar.gz"
+      checksum: "4b677d698c65370afa33757b6954ade60347aaca310ea92a63ed717d7cb0c2ff"
+      checksum-algo: "sha256"
+
+  - name: Expand Go
+    listen: task.download-go.good
+    type: exec
+    opts:
+      cmd: "tar -xf go1.10.2.linux-amd64.tar.gz"
+
+  - name: Go Version
+    listen: task.expand-go.good
+    type: exec
+    opts:
+      shell: "go version"
+
+  - name: Build
+    listen: task.go-version.good
+    type: exec
+    opts:
+      cmd: "go install ./..."
+      sub-dir: src/github.com/floeit/floe
+
+  - name: Tests
+    listen: task.build.good
+    type: exec
+    opts:
+      cmd: "go test ./..."
+      sub-dir: src/github.com/floeit/floe
+
+  - name: done
+    listen: task.tests.good
+    type: end

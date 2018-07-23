@@ -1,0 +1,43 @@
+common:
+    base-url: "/build/api" 
+    store-type: local
+    workspace-root: /home/ubuntu/floews
+    git-key: "/home/ubuntu/.ssh/id_floedemo_rsa"
+    hosts:
+        - http://127.0.0.1:8080      # ourself only
+
+flows:
+    - id: floe
+      name: Floe CI
+      ver: 1
+      
+      triggers:
+        - name: start
+          type: data
+          opts:
+            url: git@github.com:floeit/floe.git
+            form:
+              title: Start
+              fields:
+                - id: branch
+                  prompt: Branch
+                  type: text
+        
+        - name: Master Daily
+          type: timer                # fires every period seconds
+          opts:
+            period: 86400              # how often to fire in seconds
+            url: git@github.com:floeit/floe.git
+            branch: master
+
+        - name: Commits
+          type: poll-git
+          opts:
+            period: 10                                 # check every 10 seconds
+            url: git@github.com:floeit/floe.git        # the repo to check
+            refs: "refs/heads/*"                       # the refs pattern to match
+            
+      flow-file: /home/ubuntu/floe/floe.yml            # get the actual flow from this file
+
+      
+    

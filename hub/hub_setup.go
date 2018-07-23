@@ -213,7 +213,7 @@ func (h *Hub) launchTimedTriggers(storage store.Store) {
 			case "timer":
 				h.timers.register(ref, t.ID, t.Opts, startFlowTrigger)
 			case "poll-git":
-				rp := newRepoPoller(storage, t.ID, t.Opts)
+				rp := newRepoPoller(storage, t.ID, h.config.Common.GitKey, t.Opts)
 				if rp == nil {
 					log.Errorf("<%s> - could not set up repo poller for trigger: %s", ref, t.ID)
 					continue

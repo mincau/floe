@@ -1,6 +1,7 @@
 package git
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 	"time"
@@ -29,11 +30,17 @@ type Hashes struct {
 }
 
 // Ls list a remote repo
-func Ls(log logger, url, pattern, exclude string) (*Hashes, bool) {
+func Ls(log logger, url, pattern, exclude, gitKey string) (*Hashes, bool) {
 	if pattern == "" {
 		pattern = "refs/*"
 	}
-	gitOut, status := exe.RunOutput(log, "", "git", "ls-remote", "--refs", url, pattern)
+
+	var env []string
+	if gitKey != "" {
+		env = []string{fmt.Sprintf(`GIT_SSH_COMMAND=ssh -i %s`, gitKey)}
+	}
+
+	gitOut, status := exe.RunOutput(log, env, "", "git", "ls-remote", "--refs", url, pattern)
 	if status != 0 {
 		return nil, false
 	}

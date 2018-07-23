@@ -42,7 +42,7 @@ func TestRun(t *testing.T) {
 func TestRunOutput(t *testing.T) {
 	t.Parallel()
 
-	out, status := RunOutput(&tLog{t: t}, "", "bash", "-c", `echo "hello world"`)
+	out, status := RunOutput(&tLog{t: t}, nil, "", "bash", "-c", `echo "hello world"`)
 	if status != 0 {
 		t.Error("echo failed", status)
 	}
@@ -57,7 +57,7 @@ func TestRunOutput(t *testing.T) {
 func TestRunLongOutput(t *testing.T) {
 	t.Parallel()
 
-	out, status := RunOutput(&tLog{t: t}, "", "bash", "-c", `for i in {1..50}; do echo "hello line number $i"; done`)
+	out, status := RunOutput(&tLog{t: t}, nil, "", "bash", "-c", `for i in {1..50}; do echo "hello line number $i"; done`)
 	if status != 0 {
 		t.Error("echo failed", status)
 	}

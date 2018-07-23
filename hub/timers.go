@@ -95,12 +95,14 @@ type repoPoller struct {
 	url     string
 	refs    string
 	exclude string
+	gitKey  string
 }
 
-func newRepoPoller(store store.Store, nodeID string, opts nt.Opts) *repoPoller {
+func newRepoPoller(store store.Store, nodeID, gitKey string, opts nt.Opts) *repoPoller {
 	rp := &repoPoller{
 		store:  store,
 		nodeID: nodeID,
+		gitKey: gitKey,
 	}
 
 	rp.url, _ = opts["url"].(string)
@@ -123,7 +125,7 @@ func (r *repoPoller) timer(q *event.Queue, tim *timer) {
 		log.Errorf("<%s> - could not load previous refs: %s", tim.flow, err)
 	}
 
-	new, ok := git.Ls(log.Log{}, r.url, r.refs, r.exclude)
+	new, ok := git.Ls(log.Log{}, r.url, r.refs, r.exclude, r.gitKey)
 	if !ok {
 		log.Errorf("<%s> - could not get new refs: %s", tim.flow, err)
 	}

@@ -45,7 +45,6 @@ type Flow struct {
 	// or a local file e.g. file:./foo-bar/floe.yaml
 	// a FlowFile may override any setting from the flows defined in the main config file, but it
 	// does not make much sense that they override the Triggers.
-	// If this file is is taken from the same repo as the first `git-checkout`
 	FlowFile string `yaml:"flow-file"`
 
 	Name         string   // human friendly name
@@ -94,6 +93,7 @@ func (f *Flow) Load(cacheDir string) (err error) {
 		content, err = ioutil.ReadFile(f.FlowFile)
 	case "web":
 		content, err = get(cacheDir, f.FlowFile)
+	// TODO git - including the branch
 	default:
 		return fmt.Errorf("unrecognised floe file type: <%s>", f.FlowFile)
 	}

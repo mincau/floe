@@ -3,7 +3,7 @@ set -ex
 
 # example startup commands for the demo.floe.it server.
 # for your own use change the certs or remove them, change the public ip. 
-./floe  \
+sudo ./floe  \
        -tags=linux,go,couch \
        -admin=123456 \
        -host_name=h1 \
